@@ -6,7 +6,7 @@ The idea of the project is to create an information system for organizing and st
 
 
 
-A key feature of the system will be the ability to organize different media items around user-defined topics. For example, a user could create a topic such as “Space Exploration” and add a book, a documentary, an article, and a podcast related to this topic. The same media item can belong to multiple topics. For example, a science fiction movie could be associated with topics such as “Space”, “Science”, and “Future Technologies”.
+A key feature of the system will be the ability to organize different media items around user-defined topics. For example, a user could create a topic such as “Space Exploration” and add a book, a documentary, an article, and a podcast related to this topic. Each media item should belong to one primary topic, while a topic can contain multiple media items. For example, a science fiction movie could be associated with topics such as “Space”, “Science”, and “Future Technologies”.
 
 
 
