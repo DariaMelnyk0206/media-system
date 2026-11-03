@@ -1,0 +1,1067 @@
+openapi: 3.0.3
+
+info:
+  title: Personal Media Library System API
+  version: 1.0.0
+  description: >
+    REST API for the Personal Media Library System (SRS-001 v1.0).
+    Covers all functional requirements REQ-F-001 through REQ-F-066.
+    Base path: /api.
+  license:
+    name: Proprietary
+    url: https://example.com/license
+
+# No authentication — CON-008, CON-009, HD-007, HD-046
+security: []
+
+servers:
+  - url: /api
+    description: Local server
+
+tags:
+  - name: MediaItems
+    description: MediaItem CRUD and status management (REQ-F-001–019, REQ-F-062, REQ-F-064)
+  - name: MediaItemAssociations
+    description: Manage Topic associations from the MediaItem side (REQ-F-030–031, REQ-F-034)
+  - name: Topics
+    description: Topic CRUD (REQ-F-020–029, REQ-F-063)
+  - name: TopicAssociations
+    description: Manage MediaItem associations from the Topic side (REQ-F-032–034)
+  - name: Search
+    description: Unified search across MediaItems and Topics (REQ-F-038–043)
+
+paths:
+
+  # ---------------------------------------------------------------------------
+  # MediaItem collection
+  # ---------------------------------------------------------------------------
+  /media-items:
+    post:
+      tags: [MediaItems]
+      summary: Create a new MediaItem
+      operationId: createMediaItem
+      description: >
+        Creates a new MediaItem with the provided fields and auto-saves it.
+        REQ-F-001, REQ-F-002, REQ-F-003, REQ-F-004, REQ-F-005, REQ-F-006,
+        REQ-F-007, REQ-F-008, REQ-F-059, REQ-F-062, REQ-F-064.
+        VR-001, VR-002, VR-007, VR-008, VR-009.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMediaItemRequest'
+            example:
+              name: Dune
+              type: book
+              status: planned
+              notes: A classic sci-fi novel.
+              rating: 9
+              topic_ids: []
+      responses:
+        '201':
+          description: MediaItem created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaItem'
+        '400':
+          description: >
+            Validation error.
+            Possible error codes: name_required (VR-001), rating_out_of_range (VR-007),
+            invalid_type (VR-008), invalid_status (VR-009).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                name_required:
+                  value:
+                    error: name_required
+                    field: name
+                    message: Name must not be empty.
+                rating_out_of_range:
+                  value:
+                    error: rating_out_of_range
+                    field: rating
+                    message: Rating must be between 1 and 10.
+        '404':
+          description: One or more topic_ids not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: save_failed
+                field: null
+                message: Auto-save failed. Your change is available for this session.
+
+    get:
+      tags: [MediaItems]
+      summary: List MediaItems with optional search, filter, and sort
+      operationId: listMediaItems
+      description: >
+        Returns a filtered, searched, and sorted list of MediaItems.
+        All active query parameters are combined with AND logic (REQ-F-050).
+        Processing order: filter and search first, then sort (REQ-F-058).
+        REQ-F-038, REQ-F-039, REQ-F-042, REQ-F-044, REQ-F-045, REQ-F-046,
+        REQ-F-047, REQ-F-048, REQ-F-049, REQ-F-050, REQ-F-051, REQ-F-052,
+        REQ-F-053, REQ-F-054, REQ-F-055, REQ-F-056, REQ-F-057, REQ-F-058,
+        REQ-F-065. VR-010, VR-011.
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: >
+            Search query — substring, case-insensitive match on MediaItem names.
+            Empty or absent means search is inactive (REQ-F-042).
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          description: Filter by media type (REQ-F-044, VR-008).
+          schema:
+            $ref: '#/components/schemas/MediaType'
+        - name: status
+          in: query
+          required: false
+          description: Filter by status (REQ-F-045, VR-009).
+          schema:
+            $ref: '#/components/schemas/MediaStatus'
+        - name: rating_min
+          in: query
+          required: false
+          description: >
+            Inclusive lower rating bound (REQ-F-046, REQ-F-047, VR-011).
+            Unrated items are always excluded when any rating filter is active (REQ-F-048).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+        - name: rating_max
+          in: query
+          required: false
+          description: >
+            Inclusive upper rating bound (REQ-F-046, REQ-F-047, VR-011).
+            Unrated items are always excluded when any rating filter is active (REQ-F-048).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+        - name: topic_id
+          in: query
+          required: false
+          description: Filter to MediaItems associated with this Topic id (REQ-F-049).
+          schema:
+            type: string
+            format: uuid
+        - name: sort
+          in: query
+          required: false
+          description: Sort field (REQ-F-051, REQ-F-052, REQ-F-053, REQ-F-054).
+          schema:
+            type: string
+            enum: [name, rating]
+        - name: dir
+          in: query
+          required: false
+          description: >
+            Sort direction (REQ-F-051–054). Default asc.
+            Unrated items always appear last when sorting by rating (REQ-F-055).
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+      responses:
+        '200':
+          description: >
+            Filtered, searched, and sorted list of MediaItems.
+            May be an empty array when no items satisfy the active constraints.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, total]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MediaItem'
+                  total:
+                    type: integer
+                    description: Total number of items in the result.
+        '400':
+          description: >
+            Validation error.
+            Possible error codes: invalid_rating_range (VR-010), invalid_rating_bound (VR-011),
+            invalid_type (VR-008), invalid_status (VR-009).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_rating_range:
+                  value:
+                    error: invalid_rating_range
+                    field: rating_min
+                    message: Lower bound must not exceed upper bound.
+                invalid_rating_bound:
+                  value:
+                    error: invalid_rating_bound
+                    field: rating_min
+                    message: Rating bound must be between 1 and 10.
+
+  # ---------------------------------------------------------------------------
+  # MediaItem item
+  # ---------------------------------------------------------------------------
+  /media-items/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Unique identifier of the MediaItem.
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [MediaItems]
+      summary: Get a single MediaItem
+      operationId: getMediaItem
+      description: >
+        Returns a MediaItem with all its fields including associated Topics.
+        The topics array enables navigation from a MediaItem to its Topics (REQ-F-037).
+        REQ-F-009, REQ-F-036, REQ-F-037.
+      responses:
+        '200':
+          description: MediaItem found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaItem'
+        '404':
+          description: MediaItem not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+
+    patch:
+      tags: [MediaItems]
+      summary: Update a MediaItem
+      operationId: updateMediaItem
+      description: >
+        Partially updates a MediaItem. Only provided fields are changed.
+        Pass null for notes or rating to clear those fields.
+        Auto-saves on success. After a save failure the unsaved change remains
+        available for the current session (REQ-F-061).
+        REQ-F-010, REQ-F-011, REQ-F-018, REQ-F-019, REQ-F-059, REQ-F-061,
+        REQ-F-062, REQ-F-064. VR-001, VR-002, VR-007, VR-008, VR-009.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMediaItemRequest'
+            example:
+              status: completed
+              rating: 8
+      responses:
+        '200':
+          description: MediaItem updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaItem'
+        '400':
+          description: Validation error (same codes as createMediaItem).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: MediaItem not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [MediaItems]
+      summary: Delete a MediaItem
+      operationId: deleteMediaItem
+      description: >
+        Permanently deletes a MediaItem and removes all its Topic associations.
+        Associated Topics are not affected.
+        The client is responsible for obtaining user confirmation before calling
+        this endpoint (REQ-F-013, REQ-NF-004).
+        REQ-F-012, REQ-F-013, REQ-F-014, REQ-F-015, REQ-F-016, REQ-F-017,
+        REQ-F-059.
+      responses:
+        '204':
+          description: MediaItem deleted successfully.
+        '404':
+          description: MediaItem not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------------
+  # MediaItem–Topic association (Media side)
+  # ---------------------------------------------------------------------------
+  /media-items/{id}/topics/{topicId}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Unique identifier of the MediaItem.
+        schema:
+          type: string
+          format: uuid
+      - name: topicId
+        in: path
+        required: true
+        description: Unique identifier of the Topic.
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      tags: [MediaItemAssociations]
+      summary: Add a Topic to a MediaItem
+      operationId: addTopicToMediaItem
+      description: >
+        Associates a Topic with a MediaItem from the MediaItem side.
+        Idempotent — if the association already exists, returns 200.
+        Auto-saves on success.
+        REQ-F-030, REQ-F-034, REQ-F-059.
+      responses:
+        '200':
+          description: Association established (or already existed).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaItem'
+        '404':
+          description: MediaItem or Topic not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [MediaItemAssociations]
+      summary: Remove a Topic from a MediaItem
+      operationId: removeTopicFromMediaItem
+      description: >
+        Removes the association between a MediaItem and a Topic from the MediaItem side.
+        Auto-saves on success.
+        REQ-F-031, REQ-F-034, REQ-F-059.
+      responses:
+        '204':
+          description: Association removed successfully.
+        '404':
+          description: MediaItem, Topic, or association not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------------
+  # Topic collection
+  # ---------------------------------------------------------------------------
+  /topics:
+    post:
+      tags: [Topics]
+      summary: Create a new Topic
+      operationId: createTopic
+      description: >
+        Creates a new Topic with a unique name and auto-saves it.
+        REQ-F-020, REQ-F-021, REQ-F-059, REQ-F-063.
+        VR-003, VR-004, VR-005, VR-006.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTopicRequest'
+            example:
+              name: Science Fiction
+      responses:
+        '201':
+          description: Topic created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+        '400':
+          description: >
+            Validation error.
+            Possible error codes: name_required (VR-003).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: name_required
+                field: name
+                message: Topic name must not be empty.
+        '409':
+          description: >
+            Topic name already in use (VR-005).
+            Uniqueness is evaluated case-insensitively on the trimmed name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: name_taken
+                field: name
+                message: Topic name is already in use.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [Topics]
+      summary: List all Topics
+      operationId: listTopics
+      description: >
+        Returns all Topics in the personal library.
+        REQ-F-022.
+      responses:
+        '200':
+          description: List of all Topics.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TopicSummary'
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------------
+  # Topic item
+  # ---------------------------------------------------------------------------
+  /topics/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Unique identifier of the Topic.
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Topics]
+      summary: Get a single Topic with its MediaItems
+      operationId: getTopic
+      description: >
+        Returns a Topic including its name and all currently associated MediaItems.
+        REQ-F-022, REQ-F-035.
+      responses:
+        '200':
+          description: Topic found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+        '404':
+          description: Topic not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+
+    patch:
+      tags: [Topics]
+      summary: Rename a Topic
+      operationId: updateTopic
+      description: >
+        Renames an existing Topic. All existing MediaItem associations are preserved.
+        Auto-saves on success.
+        REQ-F-023, REQ-F-024, REQ-F-025, REQ-F-059, REQ-F-063.
+        VR-003, VR-004, VR-005, VR-006.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTopicRequest'
+            example:
+              name: Sci-Fi
+      responses:
+        '200':
+          description: Topic renamed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+        '400':
+          description: Validation error — name is empty (VR-003).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: name_required
+                field: name
+                message: Topic name must not be empty.
+        '404':
+          description: Topic not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+        '409':
+          description: New name already in use (VR-005, VR-006).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: name_taken
+                field: name
+                message: Topic name is already in use.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Topics]
+      summary: Delete a Topic
+      operationId: deleteTopic
+      description: >
+        Permanently deletes a Topic and removes all its MediaItem associations.
+        Associated MediaItems are not affected.
+        The client is responsible for obtaining user confirmation before calling
+        this endpoint (REQ-F-027, REQ-NF-004).
+        REQ-F-026, REQ-F-027, REQ-F-028, REQ-F-029, REQ-F-059.
+      responses:
+        '204':
+          description: Topic deleted successfully.
+        '404':
+          description: Topic not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------------
+  # MediaItem–Topic association (Topic side)
+  # ---------------------------------------------------------------------------
+  /topics/{id}/media-items/{mediaId}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Unique identifier of the Topic.
+        schema:
+          type: string
+          format: uuid
+      - name: mediaId
+        in: path
+        required: true
+        description: Unique identifier of the MediaItem.
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      tags: [TopicAssociations]
+      summary: Add a MediaItem to a Topic
+      operationId: addMediaItemToTopic
+      description: >
+        Associates a MediaItem with a Topic from the Topic side.
+        Idempotent — if the association already exists, returns 200.
+        Auto-saves on success.
+        REQ-F-032, REQ-F-034, REQ-F-059.
+      responses:
+        '200':
+          description: Association established (or already existed).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+        '404':
+          description: Topic or MediaItem not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [TopicAssociations]
+      summary: Remove a MediaItem from a Topic
+      operationId: removeMediaItemFromTopic
+      description: >
+        Removes the association between a Topic and a MediaItem from the Topic side.
+        Auto-saves on success.
+        REQ-F-033, REQ-F-034, REQ-F-059.
+      responses:
+        '204':
+          description: Association removed successfully.
+        '404':
+          description: Topic, MediaItem, or association not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                field: null
+                message: Resource not found.
+        '500':
+          description: Auto-save failed (REQ-F-060, REQ-F-066).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------------
+  # Search
+  # ---------------------------------------------------------------------------
+  /search:
+    get:
+      tags: [Search]
+      summary: Search MediaItems and Topics by name
+      operationId: search
+      description: >
+        Returns a unified list of MediaItems and Topics whose names contain
+        the query string as a case-insensitive substring.
+        Each result includes a kind field identifying it as media_item or topic.
+        Notes are never searched (REQ-F-043).
+        An empty or absent q means search is inactive and returns an empty list (REQ-F-042).
+        REQ-F-038, REQ-F-039, REQ-F-040, REQ-F-041, REQ-F-042, REQ-F-043.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: >
+            Search query string. Substring, case-insensitive match on name fields.
+            Pass empty string to receive an empty result (REQ-F-042).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >
+            Unified search results. May be empty.
+            Each item carries kind to distinguish MediaItem from Topic (IR-024).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SearchResultItem'
+        '400':
+          description: Invalid query parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: invalid_query
+                field: q
+                message: Query parameter is invalid.
+
+# =============================================================================
+# Components
+# =============================================================================
+components:
+  schemas:
+
+    # -------------------------------------------------------------------------
+    # Enumerations
+    # -------------------------------------------------------------------------
+    MediaType:
+      type: string
+      enum:
+        - book
+        - movie
+        - tv_series
+        - article
+        - podcast
+        - video
+        - other
+      description: >
+        Fixed set of media types (CON-001, BR-001, VR-008).
+        Maps SRS values: book, movie, TV series to tv_series, article, podcast, video, other.
+
+    MediaStatus:
+      type: string
+      enum:
+        - planned
+        - in_progress
+        - postponed
+        - abandoned
+        - completed
+      description: >
+        Fixed set of MediaItem status values (CON-002, BR-002, VR-009).
+        Maps SRS values: planned, in progress to in_progress, postponed, abandoned, completed.
+
+    # -------------------------------------------------------------------------
+    # Core domain objects
+    # -------------------------------------------------------------------------
+    TopicRef:
+      type: object
+      description: Lightweight Topic reference embedded inside a MediaItem response.
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique Topic identifier.
+        name:
+          type: string
+          description: Topic name (trimmed, unique case-insensitively).
+
+    TopicSummary:
+      type: object
+      description: Topic without the full media_items list — used in listTopics.
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique Topic identifier.
+        name:
+          type: string
+          description: Topic name (trimmed, unique case-insensitively).
+
+    MediaItemRef:
+      type: object
+      description: Lightweight MediaItem reference embedded inside a Topic response.
+      required: [id, name, type, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique MediaItem identifier.
+        name:
+          type: string
+          description: MediaItem name (trimmed).
+        type:
+          $ref: '#/components/schemas/MediaType'
+        status:
+          $ref: '#/components/schemas/MediaStatus'
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+          nullable: true
+          description: Rating 1–10, or null if unset (VR-007, CON-003).
+
+    MediaItem:
+      type: object
+      description: >
+        Full MediaItem domain object (CON-004, HD-011).
+        Fields: id, name, type, status, notes, rating, topics. REQ-F-009.
+      required: [id, name, type, status, notes, rating, topics]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique MediaItem identifier.
+        name:
+          type: string
+          description: MediaItem name, trimmed (VR-001, VR-002).
+        type:
+          $ref: '#/components/schemas/MediaType'
+        status:
+          $ref: '#/components/schemas/MediaStatus'
+        notes:
+          type: string
+          nullable: true
+          description: Optional free-text notes (CON-006). Null if not set.
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+          nullable: true
+          description: Optional rating 1–10 (VR-007, CON-003). Null if unset.
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicRef'
+          description: Topics associated with this MediaItem (BR-003).
+
+    Topic:
+      type: object
+      description: >
+        Full Topic domain object including all associated MediaItems.
+        REQ-F-022, REQ-F-035.
+      required: [id, name, media_items]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique Topic identifier.
+        name:
+          type: string
+          description: Topic name, trimmed, unique case-insensitively (VR-003–006, BR-005).
+        media_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MediaItemRef'
+          description: MediaItems currently associated with this Topic (BR-004).
+
+    # -------------------------------------------------------------------------
+    # Request bodies
+    # -------------------------------------------------------------------------
+    CreateMediaItemRequest:
+      type: object
+      description: Request body for creating a MediaItem (REQ-F-001–007).
+      required: [name, type]
+      properties:
+        name:
+          type: string
+          description: >
+            MediaItem name. Trimmed before save.
+            Must not be empty after trim (VR-001, VR-002).
+        type:
+          $ref: '#/components/schemas/MediaType'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/MediaStatus'
+          description: Defaults to planned if omitted (REQ-F-004).
+        notes:
+          type: string
+          nullable: true
+          description: Optional free-text notes. Null or omitted means no notes (REQ-F-005).
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+          nullable: true
+          description: Optional rating 1–10. Null or omitted means unset (REQ-F-006, VR-007).
+        topic_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: >
+            Topic ids to associate at creation time (REQ-F-007).
+            Empty array or omitted means no associations.
+
+    UpdateMediaItemRequest:
+      type: object
+      description: >
+        Request body for partially updating a MediaItem (REQ-F-010).
+        Only provided fields are updated. Pass null for notes or rating to clear them.
+      properties:
+        name:
+          type: string
+          description: New name. Trimmed before save (VR-001, VR-002).
+        type:
+          $ref: '#/components/schemas/MediaType'
+        status:
+          $ref: '#/components/schemas/MediaStatus'
+        notes:
+          type: string
+          nullable: true
+          description: Updated notes. Pass null to clear.
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+          nullable: true
+          description: Updated rating 1–10 (VR-007). Pass null to clear.
+
+    CreateTopicRequest:
+      type: object
+      description: Request body for creating a Topic (REQ-F-020).
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: >
+            Topic name. Trimmed before save and uniqueness check.
+            Must not be empty after trim (VR-003, VR-004).
+            Must be unique case-insensitively among existing Topics (VR-005).
+
+    UpdateTopicRequest:
+      type: object
+      description: Request body for renaming a Topic (REQ-F-023).
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: >
+            New Topic name. Trimmed before save and uniqueness check.
+            Must not be empty after trim (VR-003, VR-004).
+            Must be unique case-insensitively among existing Topics (VR-005, VR-006).
+
+    # -------------------------------------------------------------------------
+    # Search result
+    # -------------------------------------------------------------------------
+    SearchResultItem:
+      type: object
+      description: >
+        A single search result — either a MediaItem or a Topic.
+        The kind field identifies the type (IR-024, REQ-F-039, REQ-F-040).
+      required: [kind, id, name]
+      properties:
+        kind:
+          type: string
+          enum: [media_item, topic]
+          description: Identifies whether this result is a MediaItem or a Topic.
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the matched entity.
+        name:
+          type: string
+          description: Name of the matched entity.
+        type:
+          allOf:
+            - $ref: '#/components/schemas/MediaType'
+            - type: string
+              nullable: true
+              description: Present and non-null only when kind is media_item.
+        status:
+          allOf:
+            - $ref: '#/components/schemas/MediaStatus'
+            - type: string
+              nullable: true
+              description: Present and non-null only when kind is media_item.
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+          nullable: true
+          description: Present only when kind is media_item. Null if unset.
+
+    # -------------------------------------------------------------------------
+    # Unified error response
+    # -------------------------------------------------------------------------
+    ErrorResponse:
+      type: object
+      description: >
+        Unified error response format for all 4xx and 5xx responses.
+        REQ-F-062, REQ-F-063, REQ-F-064, REQ-F-065, REQ-F-066,
+        REQ-NF-003, VR-001, VR-003, VR-005, VR-007, VR-010.
+      required: [error, field, message]
+      properties:
+        error:
+          type: string
+          description: >
+            Machine-readable error code. Known values:
+            name_required, rating_out_of_range, invalid_type, invalid_status,
+            invalid_rating_range, invalid_rating_bound, not_found, name_taken, save_failed.
+        field:
+          type: string
+          nullable: true
+          description: The field that caused the error, or null if not field-specific.
+        message:
+          type: string
+          description: Human-readable error message in English (CON-011, REQ-NF-010).
