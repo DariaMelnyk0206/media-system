@@ -27,6 +27,7 @@ from src.errors.error_codes import (
     MESSAGES,
     NOT_FOUND,
     SAVE_FAILED,
+    STATS_FAILED,
     ErrorResponse,
 )
 
@@ -87,6 +88,13 @@ class SaveFailedError(PMSLHTTPException):
 
     def __init__(self, message: str | None = None) -> None:
         super().__init__(SAVE_FAILED, field=None, message=message, status_code=500)
+
+
+class StatisticsFailedError(PMSLHTTPException):
+    """500 Internal Server Error — collection statistics could not be calculated."""
+
+    def __init__(self) -> None:
+        super().__init__(STATS_FAILED, field=None, status_code=500)
 
 
 # ---------------------------------------------------------------------------

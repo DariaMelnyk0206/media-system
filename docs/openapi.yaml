@@ -1098,53 +1098,9 @@ components:
           minimum: 0
           description: Number of Topics in the collection (REQ-F-070).
         status_counts:
-          type: object
-          description: Count for every defined MediaStatus, including zero counts (REQ-F-071).
-          additionalProperties: false
-          required: [planned, in_progress, postponed, abandoned, completed]
-          properties:
-            planned:
-              type: integer
-              minimum: 0
-            in_progress:
-              type: integer
-              minimum: 0
-            postponed:
-              type: integer
-              minimum: 0
-            abandoned:
-              type: integer
-              minimum: 0
-            completed:
-              type: integer
-              minimum: 0
+          $ref: '#/components/schemas/StatusCounts'
         type_counts:
-          type: object
-          description: Count for every defined MediaType, including zero counts (REQ-F-071).
-          additionalProperties: false
-          required: [book, movie, tv_series, article, podcast, video, other]
-          properties:
-            book:
-              type: integer
-              minimum: 0
-            movie:
-              type: integer
-              minimum: 0
-            tv_series:
-              type: integer
-              minimum: 0
-            article:
-              type: integer
-              minimum: 0
-            podcast:
-              type: integer
-              minimum: 0
-            video:
-              type: integer
-              minimum: 0
-            other:
-              type: integer
-              minimum: 0
+          $ref: '#/components/schemas/TypeCounts'
         average_rating:
           type: number
           format: double
@@ -1184,6 +1140,56 @@ components:
           minimum: 0
           description: Number of distinct associated MediaItems; zero for an empty Topic.
 
+    StatusCounts:
+      type: object
+      description: Count for every defined MediaStatus, including zero counts (REQ-F-071).
+      additionalProperties: false
+      required: [planned, in_progress, postponed, abandoned, completed]
+      properties:
+        planned:
+          type: integer
+          minimum: 0
+        in_progress:
+          type: integer
+          minimum: 0
+        postponed:
+          type: integer
+          minimum: 0
+        abandoned:
+          type: integer
+          minimum: 0
+        completed:
+          type: integer
+          minimum: 0
+
+    TypeCounts:
+      type: object
+      description: Count for every defined MediaType, including zero counts (REQ-F-071).
+      additionalProperties: false
+      required: [book, movie, tv_series, article, podcast, video, other]
+      properties:
+        book:
+          type: integer
+          minimum: 0
+        movie:
+          type: integer
+          minimum: 0
+        tv_series:
+          type: integer
+          minimum: 0
+        article:
+          type: integer
+          minimum: 0
+        podcast:
+          type: integer
+          minimum: 0
+        video:
+          type: integer
+          minimum: 0
+        other:
+          type: integer
+          minimum: 0
+
     # -------------------------------------------------------------------------
     # Unified error response
     # -------------------------------------------------------------------------
@@ -1200,7 +1206,8 @@ components:
           description: >
             Machine-readable error code. Known values:
             name_required, rating_out_of_range, invalid_type, invalid_status,
-            invalid_rating_range, invalid_rating_bound, not_found, name_taken, save_failed.
+            invalid_rating_range, invalid_rating_bound, not_found, name_taken, save_failed,
+            stats_failed.
         field:
           type: string
           nullable: true

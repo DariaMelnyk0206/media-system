@@ -52,6 +52,7 @@ NAME_TAKEN = "name_taken"
 
 # 500
 SAVE_FAILED = "save_failed"
+STATS_FAILED = "stats_failed"
 
 
 # ---------------------------------------------------------------------------
@@ -68,4 +69,5 @@ MESSAGES: dict[str, str] = {
     NOT_FOUND: "Resource not found.",
     NAME_TAKEN: "Topic name is already in use.",
     SAVE_FAILED: "Auto-save failed. Your change is available for this session.",
+    STATS_FAILED: "Collection statistics could not be calculated.",
 }

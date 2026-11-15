@@ -217,7 +217,7 @@ All 4xx and 5xx responses use a single JSON structure (REQ-F-062–066, REQ-NF-0
 | `400 Bad Request` | Validation rule violated | VR-001, VR-007, VR-008, VR-009, VR-010, VR-011 |
 | `404 Not Found` | Resource does not exist | All resource operations |
 | `409 Conflict` | Topic name uniqueness violation | VR-005, VR-006 |
-| `500 Internal Server Error` | Auto-save failure | REQ-F-060, REQ-F-066 |
+| `500 Internal Server Error` | Auto-save or collection-statistics failure | REQ-F-060, REQ-F-066, REQ-F-074 |
 
 ### 3.3 Error Code Catalogue
 
@@ -233,6 +233,7 @@ All 4xx and 5xx responses use a single JSON structure (REQ-F-062–066, REQ-NF-0
 | `not_found` | `null` | 404 | — | REQ-F-009, REQ-F-022 |
 | `name_taken` | `"name"` | 409 | VR-005, VR-006 | REQ-F-063 |
 | `save_failed` | `null` | 500 | — | REQ-F-060, REQ-F-066 |
+| `stats_failed` | `null` | 500 | — | REQ-F-074 |
 
 ### 3.4 Special Behaviors
 

@@ -28,6 +28,7 @@ from src.repository import storage
 from src.routes.media_items import assoc_router as media_assoc_router
 from src.routes.media_items import router as media_items_router
 from src.routes.search import router as search_router
+from src.routes.stats import router as stats_router
 from src.routes.topics import assoc_router as topic_assoc_router
 from src.routes.topics import router as topics_router
 
@@ -57,7 +58,7 @@ app = FastAPI(
     version="0.1.0",
     description=(
         "REST API for the Personal Media Library System (SRS-001 v1.0). "
-        "Covers REQ-F-001 through REQ-F-066."
+        "Covers REQ-F-001 through REQ-F-066 and REQ-F-070 through REQ-F-074."
     ),
     openapi_tags=[
         {"name": "MediaItems", "description": "MediaItem CRUD and status management"},
@@ -65,6 +66,7 @@ app = FastAPI(
         {"name": "Topics", "description": "Topic CRUD"},
         {"name": "TopicAssociations", "description": "Topic–MediaItem associations"},
         {"name": "Search", "description": "Unified search across MediaItems and Topics"},
+        {"name": "Stats", "description": "Read-only collection statistics"},
     ],
     lifespan=lifespan,
 )
@@ -86,6 +88,7 @@ app.include_router(media_assoc_router, prefix="/api")
 app.include_router(topics_router, prefix="/api")
 app.include_router(topic_assoc_router, prefix="/api")
 app.include_router(search_router, prefix="/api")
+app.include_router(stats_router, prefix="/api")
 
 # ---------------------------------------------------------------------------
 # Logging middleware
