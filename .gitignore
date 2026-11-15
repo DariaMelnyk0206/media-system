@@ -1,0 +1,56 @@
+# =============================================================================
+# Personal Media Library System — .gitignore
+# Python 3.11+ / FastAPI / pytest  |  TECH-STACK-001 (2026-11-15)
+# =============================================================================
+
+# --- Python bytecode ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# --- Virtual environment ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- pytest ---
+.pytest_cache/
+.cache/
+
+# --- ruff ---
+.ruff_cache/
+
+# --- Coverage ---
+.coverage
+htmlcov/
+coverage.xml
+
+# --- Distribution / packaging ---
+*.egg-info/
+dist/
+build/
+*.egg
+
+# --- mypy / pyright ---
+.mypy_cache/
+.pyright/
+
+# --- Runtime data (application) ---
+# JSON store is regenerated at runtime; do not track.
+data/*.json
+
+# --- Logs (runtime output; not source artifacts) ---
+# Design-decision logs in logs/ ARE tracked (they are source artifacts).
+# The runtime system log is NOT tracked.
+logs/system.log
+
+# --- Editor / OS artefacts ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.iml

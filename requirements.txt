@@ -1,0 +1,14 @@
+# Personal Media Library System — Python dependencies
+# Python 3.11+  |  TECH-STACK-001 (2026-11-15)
+
+# --- Runtime ---
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.1
+
+# --- Testing ---
+pytest==8.3.3
+httpx==0.27.2
+
+# --- Linting ---
+ruff==0.8.1
