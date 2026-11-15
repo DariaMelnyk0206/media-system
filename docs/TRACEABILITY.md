@@ -20,7 +20,7 @@ The matrix serves four purposes within the SDD lifecycle:
 3. **Verification accountability** — links each requirement to the Test and Verification ticket that will confirm its correct implementation.
 4. **Scope enforcement** — supports ongoing compliance with the Scope Ceiling (CON-013) by making all covered items explicit.
 
-All 46 Jira work items were derived strictly from the approved SRS-001 baseline. No requirement, feature, or behaviour outside SRS-001 has been introduced. The Scope Ceiling (CON-013) remains binding throughout implementation.
+The original 46 Jira work items were derived strictly from the approved SRS-001 v1.0 baseline. Addendum 001 adds TEST-016 and FEAT-013; it authorizes only the narrowly scoped local statistics exception to CON-013. All other exclusions remain binding.
 
 ---
 
@@ -182,6 +182,37 @@ All 46 Jira work items were derived strictly from the approved SRS-001 baseline.
 
 ---
 
+## Addendum 001 — Collection Statistics
+
+The following links extend the baseline RTM for the additive, read-only
+`GET /api/stats` feature. AC-070..075 and BDD-071..075 are unique identifiers
+introduced by the addendum; baseline AC-047..052 retain their original meaning.
+
+| Requirement ID | Requirement Summary | Jira Issue ID | Jira Ticket Summary | Issue Type | Traceability (AC / BDD) | Assignee Role | Status |
+|---|---|---|---|---|---|---|---|
+| REQ-F-070 | Return collection-wide MediaItem and Topic totals | 47 | TEST-016: Тести — Collection Statistics | Test | AC-070, AC-074; BDD-071 | Agent | To Do |
+| REQ-F-070 | Return collection-wide MediaItem and Topic totals | 48 | FEAT-013: Реалізація — Collection Statistics | Feature | AC-070, AC-074; BDD-071 | Agent | To Do |
+| REQ-F-071 | Return complete status and media-type distributions | 47 | TEST-016: Тести — Collection Statistics | Test | AC-071, AC-074; BDD-071, BDD-072 | Agent | To Do |
+| REQ-F-071 | Return complete status and media-type distributions | 48 | FEAT-013: Реалізація — Collection Statistics | Feature | AC-071, AC-074; BDD-071, BDD-072 | Agent | To Do |
+| REQ-F-072 | Return average rating and rated count | 47 | TEST-016: Тести — Collection Statistics | Test | AC-072, AC-074; BDD-071, BDD-072 | Agent | To Do |
+| REQ-F-072 | Return average rating and rated count | 48 | FEAT-013: Реалізація — Collection Statistics | Feature | AC-072, AC-074; BDD-071, BDD-072 | Agent | To Do |
+| REQ-F-073 | Return sorted per-Topic association counts | 47 | TEST-016: Тести — Collection Statistics | Test | AC-073; BDD-073 | Agent | To Do |
+| REQ-F-073 | Return sorted per-Topic association counts | 48 | FEAT-013: Реалізація — Collection Statistics | Feature | AC-073; BDD-073 | Agent | To Do |
+| REQ-F-074 | Log statistics request outcome without user-authored data | 47 | TEST-016: Тести — Collection Statistics | Test | AC-075; BDD-074, BDD-075 | Agent | To Do |
+| REQ-F-074 | Log statistics request outcome without user-authored data | 48 | FEAT-013: Реалізація — Collection Statistics | Feature | AC-075; BDD-074, BDD-075 | Agent | To Do |
+| CON-013 / AC-069 exception | Local read-only collection statistics are permitted only by Addendum 001; all other exclusions remain | 39 | VER-006: Верифікація — Scope Ceiling CON-013 | Verification | AC-069 is qualified only for this feature; AC-075 verifies the limited exception | Agent | To Do |
+
+### Addendum Coverage
+
+| Category | Baseline | Addendum 001 | Current total |
+|---|---:|---:|---:|
+| Functional requirements | 66 | 5 | 71 |
+| Acceptance criteria | 69 | 6 | 75 |
+| BDD scenarios | 70 | 5 | 75 |
+| Work items | 46 | 2 | 48 |
+
+---
+
 ## Gate Tickets
 
 The following Gate tickets are not mapped to individual requirements but serve as lifecycle control points that block downstream phases until a human approves progress.
@@ -200,9 +231,13 @@ The following Gate tickets are not mapped to individual requirements but serve a
 
 | Category | Count | Covered | Coverage Rate |
 |---|---|---|---|
-| Functional Requirements (REQ-F-001..REQ-F-066) | 66 | 66 | 100% |
+| Baseline Functional Requirements (REQ-F-001..REQ-F-066) | 66 | 66 | 100% |
 | Constraints (CON-001..CON-013) | 13 | 13 | 100% |
-| **Total** | **79** | **79** | **100%** |
+| **Baseline total** | **79** | **79** | **100%** |
+
+Addendum 001 contributes five additional functional requirements (REQ-F-070..074),
+six acceptance criteria (AC-070..075), five BDD scenarios (BDD-071..075), and
+two work items. See **Addendum 001 — Collection Statistics** above.
 
 > **Note on REQ-F-056 (tie order):** Covered by FEAT-010 with an intentional documentation gap — the SRS explicitly states that tie order is unspecified and no AC or BDD scenario is possible by design (see SRS-001 §12.2).
 
@@ -216,30 +251,30 @@ The following Gate tickets are not mapped to individual requirements but serve a
 |---|---|---|
 | Gate | 3 | Human |
 | Specification | 5 | Agent |
-| Test | 15 | Agent |
-| Feature | 12 | Agent |
+| Test | 16 | Agent |
+| Feature | 13 | Agent |
 | Verification | 6 | Agent |
 | Validation | 3 | Human |
 | Documentation | 2 | Agent |
-| **Total** | **46** | |
+| **Total** | **48** | |
 
 ### Role Split
 
 | Role | Count | Percentage |
 |---|---|---|
-| Agent | 40 | 87% |
-| Human | 6 | 13% |
+| Agent | 42 | 87.5% |
+| Human | 6 | 12.5% |
 
 ### Traceability Artefact Coverage
 
 | Artefact Type | Total in SRS-001 | Linked in This RTM |
 |---|---|---|
-| Acceptance Criteria (AC) | 69 | 69 |
-| BDD Scenarios | 70 | 70 |
+| Acceptance Criteria (AC) | 75 | 75 (69 baseline + 6 addendum) |
+| BDD Scenarios | 75 | 75 (70 baseline + 5 addendum) |
 | Validation Rules (VR) | 11 | 11 |
 | Business Rules (BR) | 10 | via REQ-F |
 
 ---
 
-*End of RTM-001 — Version 1.0*  
-*Source: spec/srs.md v1.0 · docs/jira-decomposition.csv*
+*End of RTM-001 — Version 1.0 with Addendum 001*
+*Source: spec/srs.md v1.0 · spec/addendum-001-collection-stats.md · docs/jira-decomposition.csv*

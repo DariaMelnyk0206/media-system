@@ -5,7 +5,7 @@ info:
   version: 1.0.0
   description: >
     REST API for the Personal Media Library System (SRS-001 v1.0).
-    Covers all functional requirements REQ-F-001 through REQ-F-066.
+    Covers REQ-F-001 through REQ-F-066 and REQ-F-070 through REQ-F-074.
     Base path: /api.
   license:
     name: Proprietary
@@ -29,6 +29,8 @@ tags:
     description: Manage MediaItem associations from the Topic side (REQ-F-032–034)
   - name: Search
     description: Unified search across MediaItems and Topics (REQ-F-038–043)
+  - name: Stats
+    description: Read-only collection statistics (REQ-F-070–074, SRS-ADD-001)
 
 paths:
 
@@ -774,6 +776,34 @@ paths:
                 field: q
                 message: Query parameter is invalid.
 
+  # ---------------------------------------------------------------------------
+  # Collection statistics (SRS-ADD-001)
+  # ---------------------------------------------------------------------------
+  /stats:
+    get:
+      tags: [Stats]
+      summary: Get aggregate collection statistics
+      operationId: getCollectionStats
+      description: >
+        Returns read-only totals, status/type distributions, rating aggregates,
+        and per-Topic MediaItem counts. Topic summaries are ordered by
+        descending MediaItem count, then case-insensitive ascending Topic name.
+        No collection data is modified.
+        REQ-F-070, REQ-F-071, REQ-F-072, REQ-F-073, REQ-F-074.
+      responses:
+        '200':
+          description: Collection statistics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionStatsResponse'
+        '500':
+          description: Statistics could not be calculated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 # =============================================================================
 # Components
 # =============================================================================
@@ -1040,6 +1070,119 @@ components:
           maximum: 10
           nullable: true
           description: Present only when kind is media_item. Null if unset.
+
+    # -------------------------------------------------------------------------
+    # Collection statistics (SRS-ADD-001)
+    # -------------------------------------------------------------------------
+    CollectionStatsResponse:
+      type: object
+      description: >
+        Read-only aggregate of the current local collection (REQ-F-070–074).
+        Every status/type value is present in its distribution, including zero
+        counts. average_rating is null when rated_count is zero.
+      required:
+        - total_media_items
+        - total_topics
+        - status_counts
+        - type_counts
+        - average_rating
+        - rated_count
+        - topics_summary
+      properties:
+        total_media_items:
+          type: integer
+          minimum: 0
+          description: Number of MediaItems in the collection (REQ-F-070).
+        total_topics:
+          type: integer
+          minimum: 0
+          description: Number of Topics in the collection (REQ-F-070).
+        status_counts:
+          type: object
+          description: Count for every defined MediaStatus, including zero counts (REQ-F-071).
+          additionalProperties: false
+          required: [planned, in_progress, postponed, abandoned, completed]
+          properties:
+            planned:
+              type: integer
+              minimum: 0
+            in_progress:
+              type: integer
+              minimum: 0
+            postponed:
+              type: integer
+              minimum: 0
+            abandoned:
+              type: integer
+              minimum: 0
+            completed:
+              type: integer
+              minimum: 0
+        type_counts:
+          type: object
+          description: Count for every defined MediaType, including zero counts (REQ-F-071).
+          additionalProperties: false
+          required: [book, movie, tv_series, article, podcast, video, other]
+          properties:
+            book:
+              type: integer
+              minimum: 0
+            movie:
+              type: integer
+              minimum: 0
+            tv_series:
+              type: integer
+              minimum: 0
+            article:
+              type: integer
+              minimum: 0
+            podcast:
+              type: integer
+              minimum: 0
+            video:
+              type: integer
+              minimum: 0
+            other:
+              type: integer
+              minimum: 0
+        average_rating:
+          type: number
+          format: double
+          minimum: 1
+          maximum: 10
+          multipleOf: 0.01
+          nullable: true
+          description: >
+            Mean of non-null MediaItem ratings rounded half-up to two decimal
+            places; null when rated_count is zero (REQ-F-072).
+        rated_count:
+          type: integer
+          minimum: 0
+          description: Number of MediaItems with a non-null rating (REQ-F-072).
+        topics_summary:
+          type: array
+          description: >
+            One item per Topic, ordered by descending media_item_count and
+            case-insensitive ascending name (REQ-F-073).
+          items:
+            $ref: '#/components/schemas/TopicStatItem'
+
+    TopicStatItem:
+      type: object
+      description: Topic and the number of distinct associated MediaItems.
+      required: [id, name, media_item_count]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique Topic identifier.
+        name:
+          type: string
+          description: Topic name.
+        media_item_count:
+          type: integer
+          minimum: 0
+          description: Number of distinct associated MediaItems; zero for an empty Topic.
 
     # -------------------------------------------------------------------------
     # Unified error response

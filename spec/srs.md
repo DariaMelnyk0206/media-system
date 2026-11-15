@@ -65,6 +65,7 @@ The following artifacts were produced during the SKED elicitation phase and are 
 | Approved Constraints baseline | CON-001 through CON-013 |
 | Approved Acceptance Criteria baseline | AC-001 through AC-069 |
 | Approved BDD Scenarios (corrected) | BDD-001 through BDD-070 |
+| Approved addenda | SRS-ADD-001 — Collection Statistics (narrowly qualifies CON-013 and AC-069) |
 
 ### 1.5 Document Conventions
 

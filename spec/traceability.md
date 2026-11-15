@@ -447,4 +447,54 @@ Validation rules VR-001–011 are sub-requirements of the Functional Requirement
 
 ---
 
-*End of Requirements Traceability Matrix — Version 1.0*
+*End of baseline Requirements Traceability Matrix — Version 1.0*
+
+---
+
+## Part 8 — Addendum 001: Collection Statistics
+
+This section extends the initial SRS-001 v1.0 baseline. The addendum uses
+AC-070..075 because AC-047..052 are already defined in the baseline. BDD-071..075
+continue after the baseline's BDD-070.
+
+### Functional Requirements → Acceptance Criteria → BDD → Tickets
+
+| Req ID | Requirement (abbreviated) | Acceptance Criteria | BDD Scenarios | Tickets |
+|---|---|---|---|---|
+| REQ-F-070 | Return total MediaItem and Topic counts | AC-070, AC-074 | BDD-071 | TEST-016, FEAT-013 |
+| REQ-F-071 | Return complete status and type distributions | AC-071, AC-074 | BDD-071, BDD-072 | TEST-016, FEAT-013 |
+| REQ-F-072 | Return average rating and rated count | AC-072, AC-074 | BDD-071, BDD-072 | TEST-016, FEAT-013 |
+| REQ-F-073 | Return ordered Topic association counts | AC-073 | BDD-073 | TEST-016, FEAT-013 |
+| REQ-F-074 | Log request outcome without user-authored content | AC-075 | BDD-074, BDD-075 | TEST-016, FEAT-013 |
+
+### Addendum Acceptance Criteria → Requirements
+
+| AC ID | Acceptance Criterion (abbreviated) | Source Requirements |
+|---|---|---|
+| AC-070 | Collection totals match current records | REQ-F-070 |
+| AC-071 | Complete status/type counts sum to MediaItem total | REQ-F-071 |
+| AC-072 | Rated-only mean and count; null with no ratings | REQ-F-072 |
+| AC-073 | Every Topic has a distinct associated-item count and deterministic order | REQ-F-073 |
+| AC-074 | Empty collection returns zero/empty aggregates and null average | REQ-F-070..072 |
+| AC-075 | Query is logged; failures use HTTP 500 ErrorResponse | REQ-F-074 |
+
+### Addendum BDD Scenarios → Requirements and Acceptance Criteria
+
+| BDD ID | Scenario (abbreviated) | Source Requirements | Acceptance Criteria |
+|---|---|---|---|
+| BDD-071 | Statistics for an empty collection | REQ-F-070..072 | AC-070, AC-071, AC-072, AC-074 |
+| BDD-072 | Rating aggregates exclude unrated items | REQ-F-071..072 | AC-071, AC-072 |
+| BDD-073 | Many-to-many Topic counts and ordering | REQ-F-073 | AC-073 |
+| BDD-074 | Successful statistics request is logged | REQ-F-074 | AC-075 |
+| BDD-075 | Processing failure returns 500 and is logged | REQ-F-074 | AC-075 |
+
+### Scope Exception
+
+Addendum 001 narrowly supersedes CON-013's exclusion of statistics and
+qualifies AC-069 for the local, read-only `GET /api/stats` capability only.
+AC-069 and CON-013 remain in force for all other exclusions. The addendum is
+additive and does not change existing API contracts.
+
+---
+
+*End of Requirements Traceability Matrix — Version 1.0 with Addendum 001*
