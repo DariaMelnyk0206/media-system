@@ -4,18 +4,18 @@ src/models/topic.py
 Pydantic domain models for Topic.
 
 Covers:
-  HD-015  Topic has id and name
-  HD-023  Topic may have zero or more MediaItems
-  VR-003  Topic name not empty
-  VR-004  Topic name trimmed
-  VR-005  Topic name unique case-insensitively
+  HD-015  Topic has id and name.
+  HD-023  Topic may have zero or more MediaItems.
+  VR-003  Topic name not empty.
+  VR-004  Topic name trimmed.
+  VR-005  Topic name unique case-insensitively.
 """
 
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from src.models.media_item import MediaItem, MediaItemRef
+from src.models.media_item import MediaItemRef
 
 # ---------------------------------------------------------------------------
 # Request schemas
@@ -40,7 +40,7 @@ class UpdateTopicRequest(BaseModel):
 
 
 class TopicSummary(BaseModel):
-    """Topic without media_items — used by GET /api/topics list."""
+    """Lightweight Topic without media_items — used in GET /api/topics list."""
 
     id: str
     name: str
@@ -60,19 +60,23 @@ class Topic(BaseModel):
 
 
 class SearchResultItem(BaseModel):
-    """Unified search result item with 'kind' discriminator (IR-024, DD-008)."""
+    """Unified search result item with 'kind' discriminator (IR-024, DD-008).
 
-    kind: str          # "media_item" | "topic"
+    kind == "media_item": type, status, rating are populated.
+    kind == "topic":      type, status, rating are null.
+    """
+
+    kind: str
     id: str
     name: str
-    type: str | None = None    # MediaType value -- present for media_item results
-    status: str | None = None  # MediaStatus value -- present for media_item results
-    rating: int | None = None  # present for media_item results only
+    type: str | None = None
+    status: str | None = None
+    rating: int | None = None
 
 
 # ---------------------------------------------------------------------------
-# Typed list/search response wrappers (used as response_model in routes so
-# that FastAPI exposes TopicSummary, SearchResultItem in the OpenAPI schema)
+# Typed list/search response wrappers
+# Used as response_model in routes so FastAPI exposes the schemas in openapi.json.
 # ---------------------------------------------------------------------------
 
 
@@ -80,13 +84,6 @@ class TopicListResponse(BaseModel):
     """Response body for GET /api/topics."""
 
     data: list[TopicSummary]
-
-
-class MediaItemListResponse(BaseModel):
-    """Response body for GET /api/media-items."""
-
-    data: list[MediaItem]
-    total: int
 
 
 class SearchResponse(BaseModel):

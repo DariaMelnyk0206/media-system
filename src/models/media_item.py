@@ -75,7 +75,7 @@ class CreateMediaItemRequest(BaseModel):
 class UpdateMediaItemRequest(BaseModel):
     """PATCH /api/media-items/{id} request body.
 
-    All fields are optional — absent field means no change (DD-004).
+    All fields are optional — an absent field means no change (DD-004).
     Pass null for notes or rating to clear those fields (DD-005).
     """
 
@@ -84,8 +84,6 @@ class UpdateMediaItemRequest(BaseModel):
     status: MediaStatus | None = None
     notes: str | None = None
     rating: int | None = None
-    # Sentinel to distinguish "absent" from "null" for nullable fields.
-    # We use a model_fields_set check at the service layer instead.
 
 
 # ---------------------------------------------------------------------------
@@ -110,3 +108,15 @@ class MediaItem(BaseModel):
     notes: str | None = None
     rating: int | None = None
     topics: list[TopicRef] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Typed list-response wrapper (used as response_model in GET /api/media-items)
+# ---------------------------------------------------------------------------
+
+
+class MediaItemListResponse(BaseModel):
+    """Response body for GET /api/media-items."""
+
+    data: list[MediaItem]
+    total: int

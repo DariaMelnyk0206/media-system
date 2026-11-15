@@ -16,8 +16,9 @@ the behaviour described either way: non-empty, trimmed, case-insensitively uniqu
 from __future__ import annotations
 
 from src.errors import error_codes
-from src.errors.handlers import ConflictError, ValidationError
+from src.errors.handlers import ConflictError
 from src.logging.logger import get_logger
+from src.validators.common import validate_name
 
 log = get_logger(__name__)
 
@@ -33,11 +34,7 @@ def validate_and_trim_name(name: str) -> str:
     Returns the trimmed name on success.
     Raises ValidationError(NAME_REQUIRED) on failure.
     """
-    trimmed = name.strip()
-    if not trimmed:
-        log.debug("validation.topic.name_required  raw=%r", name)
-        raise ValidationError(error_codes.NAME_REQUIRED, field="name")
-    return trimmed
+    return validate_name(name, logger=log, event="validation.topic.name_required ")
 
 
 # ---------------------------------------------------------------------------

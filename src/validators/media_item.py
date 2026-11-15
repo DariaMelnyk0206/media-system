@@ -18,6 +18,7 @@ from __future__ import annotations
 from src.errors import error_codes
 from src.errors.handlers import ValidationError
 from src.logging.logger import get_logger
+from src.validators.common import validate_name
 
 log = get_logger(__name__)
 
@@ -33,11 +34,7 @@ def validate_and_trim_name(name: str) -> str:
     Returns the trimmed name on success.
     Raises ValidationError(NAME_REQUIRED) on failure.
     """
-    trimmed = name.strip()
-    if not trimmed:
-        log.debug("validation.name_required  raw=%r", name)
-        raise ValidationError(error_codes.NAME_REQUIRED, field="name")
-    return trimmed
+    return validate_name(name, logger=log, event="validation.name_required ")
 
 
 # ---------------------------------------------------------------------------
@@ -56,6 +53,19 @@ def validate_rating(rating: int | None) -> None:
     if not isinstance(rating, int) or rating < 1 or rating > 10:
         log.debug("validation.rating_out_of_range  rating=%r", rating)
         raise ValidationError(error_codes.RATING_OUT_OF_RANGE, field="rating")
+
+
+def validate_rating_bounds(
+    rating_min: int | None,
+    rating_max: int | None,
+) -> None:
+    """Validate list-query rating bounds (VR-010, VR-011)."""
+    if rating_min is not None and not 1 <= rating_min <= 10:
+        raise ValidationError(error_codes.INVALID_RATING_BOUND, field="rating_min")
+    if rating_max is not None and not 1 <= rating_max <= 10:
+        raise ValidationError(error_codes.INVALID_RATING_BOUND, field="rating_max")
+    if rating_min is not None and rating_max is not None and rating_min > rating_max:
+        raise ValidationError(error_codes.INVALID_RATING_RANGE, field="rating_min")
 
 
 # ---------------------------------------------------------------------------

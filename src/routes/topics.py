@@ -4,12 +4,12 @@ src/routes/topics.py
 HTTP routes for Topic CRUD and Topic–MediaItem associations.
 
 Endpoints:
-  POST   /topics                              createTopic         (FEAT-005, REQ-F-020..021)
-  GET    /topics                              listTopics          (FEAT-005, REQ-F-022)
-  GET    /topics/{id}                         getTopic            (FEAT-005, REQ-F-022)
-  PATCH  /topics/{id}                         updateTopic         (FEAT-005, REQ-F-023..025)
-  DELETE /topics/{id}                         deleteTopic         (FEAT-005, REQ-F-026..029)
-  POST   /topics/{id}/media-items/{mediaId}   addMediaItemToTopic (FEAT-006, REQ-F-032)
+  POST   /topics                              createTopic              (FEAT-005, REQ-F-020..021)
+  GET    /topics                              listTopics               (FEAT-005, REQ-F-022)
+  GET    /topics/{id}                         getTopic                 (FEAT-005, REQ-F-022)
+  PATCH  /topics/{id}                         updateTopic              (FEAT-005, REQ-F-023..025)
+  DELETE /topics/{id}                         deleteTopic              (FEAT-005, REQ-F-026..029)
+  POST   /topics/{id}/media-items/{mediaId}   addMediaItemToTopic      (FEAT-006, REQ-F-032)
   DELETE /topics/{id}/media-items/{mediaId}   removeMediaItemFromTopic (FEAT-006, REQ-F-033)
 
 All validation, persistence, and logging are delegated to the service layer.
@@ -20,7 +20,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi.responses import Response
 
-from src.errors.error_codes import ErrorResponse
+from src.errors.responses import err400, err404, err409, err500
 from src.logging.logger import get_logger
 from src.models.topic import (
     CreateTopicRequest,
@@ -31,11 +31,6 @@ from src.models.topic import (
 from src.services import association_service, topic_service
 
 log = get_logger(__name__)
-
-_err400 = {"model": ErrorResponse, "description": "Validation error"}
-_err404 = {"model": ErrorResponse, "description": "Not found"}
-_err409 = {"model": ErrorResponse, "description": "Conflict"}
-_err500 = {"model": ErrorResponse, "description": "Auto-save failed"}
 
 router = APIRouter(prefix="/topics", tags=["Topics"])
 assoc_router = APIRouter(prefix="/topics", tags=["TopicAssociations"])
@@ -50,7 +45,7 @@ assoc_router = APIRouter(prefix="/topics", tags=["TopicAssociations"])
     "",
     response_model=Topic,
     status_code=201,
-    responses={400: _err400, 409: _err409, 500: _err500},
+    responses={400: err400, 409: err409, 500: err500},
 )
 def create_topic(req: CreateTopicRequest) -> Topic:
     """Create a new Topic (FEAT-005, REQ-F-020..021).
@@ -58,7 +53,6 @@ def create_topic(req: CreateTopicRequest) -> Topic:
     VR-003/004: name trimmed and non-empty (service layer).
     VR-005:     name unique case-insensitively (service layer).
     REQ-F-059:  auto-save (service layer).
-    Logs: topic.create
     """
     return topic_service.create_topic(req.name)
 
@@ -72,7 +66,7 @@ def create_topic(req: CreateTopicRequest) -> Topic:
     "",
     response_model=TopicListResponse,
     status_code=200,
-    responses={400: _err400, 500: _err500},
+    responses={400: err400, 500: err500},
 )
 def list_topics() -> TopicListResponse:
     """List all Topics as TopicSummary objects (FEAT-005, REQ-F-022)."""
@@ -88,10 +82,10 @@ def list_topics() -> TopicListResponse:
     "/{topic_id}",
     response_model=Topic,
     status_code=200,
-    responses={404: _err404},
+    responses={404: err404},
 )
 def get_topic(topic_id: str) -> Topic:
-    """Return a single Topic with its media_items (FEAT-005, REQ-F-022)."""
+    """Return a single Topic with its associated MediaItems (FEAT-005, REQ-F-022)."""
     return topic_service.get_topic(topic_id)
 
 
@@ -104,15 +98,14 @@ def get_topic(topic_id: str) -> Topic:
     "/{topic_id}",
     response_model=Topic,
     status_code=200,
-    responses={400: _err400, 404: _err404, 409: _err409, 500: _err500},
+    responses={400: err400, 404: err404, 409: err409, 500: err500},
 )
 def update_topic(topic_id: str, req: UpdateTopicRequest) -> Topic:
     """Rename a Topic (FEAT-005, REQ-F-023..025).
 
     VR-003/004: name trimmed and non-empty (service layer).
-    VR-006:     uniqueness check excluding self (service layer).
+    VR-006:     name unique case-insensitively excluding self (service layer).
     REQ-F-059:  auto-save (service layer).
-    Logs: topic.update
     """
     return topic_service.update_topic(topic_id, req.name)
 
@@ -125,14 +118,13 @@ def update_topic(topic_id: str, req: UpdateTopicRequest) -> Topic:
 @router.delete(
     "/{topic_id}",
     status_code=204,
-    responses={404: _err404, 500: _err500},
+    responses={404: err404, 500: err500},
 )
 def delete_topic(topic_id: str) -> Response:
     """Delete a Topic and unlink it from all MediaItems (FEAT-005, REQ-F-026..029).
 
-    REQ-F-029: MediaItems remain intact.
+    REQ-F-029: associated MediaItems are not deleted.
     REQ-F-059: auto-save (service layer).
-    Logs: topic.delete
     """
     topic_service.delete_topic(topic_id)
     return Response(status_code=204)
@@ -147,14 +139,10 @@ def delete_topic(topic_id: str) -> Response:
     "/{topic_id}/media-items/{media_id}",
     response_model=Topic,
     status_code=200,
-    responses={404: _err404, 500: _err500},
+    responses={404: err404, 500: err500},
 )
 def add_media_item_to_topic(topic_id: str, media_id: str) -> Topic:
-    """Associate a MediaItem with a Topic (idempotent, FEAT-006, REQ-F-032).
-
-    404 if either entity does not exist.
-    Logs: association.link
-    """
+    """Associate a MediaItem with a Topic (idempotent, FEAT-006, REQ-F-032)."""
     return association_service.add_media_item_to_topic(topic_id, media_id)
 
 
@@ -166,13 +154,9 @@ def add_media_item_to_topic(topic_id: str, media_id: str) -> Topic:
 @assoc_router.delete(
     "/{topic_id}/media-items/{media_id}",
     status_code=204,
-    responses={404: _err404, 500: _err500},
+    responses={404: err404, 500: err500},
 )
 def remove_media_item_from_topic(topic_id: str, media_id: str) -> Response:
-    """Remove a MediaItem association from a Topic (FEAT-006, REQ-F-033).
-
-    404 if the association does not exist.
-    Logs: association.unlink
-    """
+    """Remove a MediaItem association from a Topic (FEAT-006, REQ-F-033)."""
     association_service.remove_media_item_from_topic(topic_id, media_id)
     return Response(status_code=204)
