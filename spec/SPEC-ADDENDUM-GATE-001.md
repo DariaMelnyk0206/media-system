@@ -39,5 +39,14 @@
 contract are aligned sufficiently to proceed to implementation planning for
 FEAT-013 and TEST-016.
 
-This is a documentation gate decision only. It does not claim that the
-endpoint has been implemented or runtime-tested.
+At the time of this documentation gate, the endpoint had not yet been
+implemented or runtime-tested. The later implementation result is recorded
+below.
+
+## Post-Implementation Verification
+
+The planned implementation was completed after this gate. On 2026-11-15,
+`pytest tests/ --tb=short -q` passed **297/297** unit and OpenAPI contract
+tests. Ruff passed for `src/`, `tests/contract/`, and
+`tests/unit/test_collection_stats.py`. The endpoint, response schemas, and
+200/500 responses remain aligned with the approved addendum.

@@ -4,15 +4,15 @@
 **Document ID:** RTM-001
 **Version:** 1.0
 **Date:** 2026-10-04
-**Status:** Initial Baseline
+**Status:** Implementation Verified
 **Source SRS:** spec/srs.md v1.0
 
 ---
 
 ## Notes on This Document
 
-- This matrix covers all approved requirements: REQ-F-001–066, REQ-NF-001–011, IR-001–043, CON-001–013.
-- The columns **Tickets**, **Tests**, **Code**, and **Documentation** are future traceability fields. All are marked `—` in this initial baseline; they will be populated as implementation progresses.
+- This matrix covers the approved baseline requirements REQ-F-001–066, REQ-NF-001–011, IR-001–043, CON-001–013, plus Addendum 001 requirements REQ-F-070–074.
+- Baseline links are retained as approved. Addendum 001 links and final verification statuses are recorded in Parts 8 and 9.
 - A relationship is recorded only where it is supported by the approved specification. No relationship is inferred from proximity alone.
 - Intentional gaps (requirements with no BDD scenario by design) are marked with a note rather than left blank.
 - Two known gaps from the SRS Section 11 traceability table (AC-043, AC-047, BDD-006, BDD-022) are correctly mapped here and reported in the audit section.
@@ -498,3 +498,27 @@ additive and does not change existing API contracts.
 ---
 
 *End of Requirements Traceability Matrix — Version 1.0 with Addendum 001*
+
+---
+
+## Part 9 — Final Implementation Verification
+
+Verification was recorded on 2026-11-15. Requirement identifiers follow the
+approved SRS baseline and Addendum 001; REQ-F-067..069 are unallocated and are
+not part of the current requirement set.
+
+| Artifact category | Identifiers / scope | Status | Evidence |
+|---|---|---|---|
+| Functional requirements | REQ-F-001..066, REQ-F-070..074 | PASS | Unit and contract suite; addendum coverage in Part 8 |
+| Acceptance criteria | AC-001..069, AC-070..075 | PASS | Mapped to requirements and verified behavior |
+| BDD scenarios | BDD-001..070, BDD-071..075 | PASS | Mapped to requirements and acceptance criteria |
+| Unit test modules | All 13 modules under `tests/unit/` | PASS | Full pytest run |
+| OpenAPI contract module | `tests/contract/test_openapi_contract.py` | PASS | Full pytest run |
+| OpenAPI operations | All 16 operations documented under `/api` | PASS | Runtime contract test and OpenAPI specification |
+| Full test suite | `pytest tests/ --tb=short -q` | PASS — 297/297 | 2026-11-15 |
+| Ruff | Implementation, contract tests, collection-statistics tests | PASS | `ruff check src/ tests/contract/ tests/unit/test_collection_stats.py` |
+
+The module-by-module and operation-by-operation inventories, including their
+individual PASS statuses, are maintained in
+[`docs/TRACEABILITY.md`](../docs/TRACEABILITY.md). The full-suite result
+includes the 13 unit modules and the OpenAPI contract module.

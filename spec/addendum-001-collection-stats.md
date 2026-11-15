@@ -2,7 +2,7 @@
 
 **Document ID:** SRS-ADD-001  
 **Feature:** FEAT-013 — Collection Statistics  
-**Status:** Proposed for implementation  
+**Status:** Implemented and verified
 **Date:** 2026-11-15  
 **Applies to:** SRS-001 v1.0  
 **Related test ticket:** TEST-016
@@ -155,7 +155,16 @@ All other exclusions in CON-013 remain in force. This addendum is authoritative
 for this feature where it supplements or narrowly supersedes SRS-001 v1.0; the
 original AC-047..AC-052 definitions remain unchanged.
 
-## 7. Traceability
+## 7. Implementation Verification
+
+The addendum is implemented by `GET /api/stats` and documented in
+`docs/openapi.yaml`. The final recorded test run on 2026-11-15 passed all 297
+unit and OpenAPI contract tests. Ruff passed for the implementation, contract
+tests, and the collection-statistics unit tests. The seven feature tests cover
+empty collections, status/type totals, rating aggregates, Topic associations
+and ordering, request logging, error handling, and persistence across restart.
+
+## 8. Traceability
 
 | Requirement | Acceptance Criteria | BDD Scenarios | Tickets |
 |---|---|---|---|

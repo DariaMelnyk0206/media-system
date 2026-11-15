@@ -22,6 +22,7 @@
 10. [BDD Scenarios](#10-bdd-scenarios)
 11. [Traceability Matrix](#11-traceability-matrix)
 12. [Verification Summary](#12-verification-summary)
+    - [Addendum 001 implementation verification](#126-addendum-001-implementation-verification)
 
 ---
 
@@ -38,6 +39,11 @@ This document is the product of a structured SKED (Structured Knowledge Elicitat
 The system is a personal media tracking application that enables a single local user to record, organise, and review media content they have consumed or plan to consume. The system allows the user to store MediaItems, assign them to user-defined Topics, record personal notes and ratings, track consumption status, and retrieve items through search, filtering, and sorting.
 
 The system is not a content delivery platform, a social network, a recommendation engine, or a metadata aggregation service.
+
+The current implementation also provides the narrowly scoped, local,
+read-only collection summary specified by SRS-ADD-001. This addendum qualifies
+the original exclusion of statistics; it does not permit external metadata
+aggregation or other excluded analytics.
 
 ### 1.3 Intended Audience
 
@@ -103,6 +109,8 @@ The system provides the following major capability groups:
 8. **Combined operations** — Apply search, filters, and sorting simultaneously.
 9. **Automatic persistence** — Save all successful changes without requiring a user Save action.
 10. **Failure notification** — Inform the user when a save operation fails, while retaining the unsaved change for the current session.
+11. **Collection statistics** — Summarize local collection totals, status/type
+    distributions, ratings, and Topic associations as specified by SRS-ADD-001.
 
 ### 2.3 User Characteristics
 
@@ -183,6 +191,11 @@ The following capabilities are within scope for the current version.
 - Auto-save all successful changes.
 - Notify user on save failure; retain unsaved change for the session.
 
+**Collection statistics**
+- Provide a read-only summary of local collection totals, status/type
+  distributions, ratings, and Topic associations, as specified by
+  SRS-ADD-001.
+
 ### 3.2 Out-of-Scope Capabilities
 
 The following are explicitly excluded from the current version.
@@ -195,7 +208,7 @@ The following are explicitly excluded from the current version.
 | External metadata retrieval | HD-027, HD-034 |
 | Import from or export to external files or services | HD-034 |
 | Built-in backup or restore | HD-034 |
-| Statistics, analytics, or summary views | HD-034 |
+| Statistics, analytics, or summary views, except the local read-only collection statistics narrowly specified by SRS-ADD-001 | HD-034; SRS-ADD-001 |
 | Cloud storage or synchronisation | HD-034 |
 | Multilingual or internationalisation support | HD-045 |
 | Special accessibility features | HD-044 |
@@ -1878,6 +1891,24 @@ The following items have no dedicated acceptance criterion or BDD scenario; this
 | Quantitative performance threshold | Confirmed as not required (Q-NFR-02) | No action needed |
 | Maximum library size | Confirmed as not required (Q-NFR-03) | No action needed |
 | Quantitative reliability target | Confirmed as not required (Q-NFR-04) | No action needed |
+
+### 12.6 Addendum 001 Implementation Verification
+
+The original SRS-001 v1.0 requirements remain the approved baseline; the
+following additive requirements and acceptance artifacts are defined by
+SRS-ADD-001:
+
+| Addendum artifact | Scope | Verification status |
+|---|---|---|
+| Functional requirements | REQ-F-070..074 | PASS |
+| Acceptance criteria | AC-070..075 | PASS |
+| BDD scenarios | BDD-071..075 | PASS |
+| Unit and OpenAPI contract suite | `pytest tests/ --tb=short -q` | PASS — 297/297 |
+| API contract | `GET /api/stats`, responses 200 and 500 | PASS |
+
+The additive operation does not change any existing route or response
+contract. See [SRS-ADD-001](addendum-001-collection-stats.md) and
+[RTM-001](traceability.md) for detailed scope and verification links.
 
 ---
 
