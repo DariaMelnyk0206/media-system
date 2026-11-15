@@ -23,6 +23,7 @@ from fastapi.responses import Response
 from src.errors.error_codes import (
     INVALID_RATING_BOUND,
     INVALID_RATING_RANGE,
+    ErrorResponse,
 )
 from src.errors.handlers import ValidationError
 from src.logging.logger import get_logger
@@ -33,9 +34,14 @@ from src.models.media_item import (
     MediaType,
     UpdateMediaItemRequest,
 )
+from src.models.topic import MediaItemListResponse
 from src.services import association_service, media_item_service
 
 log = get_logger(__name__)
+
+_err400 = {"model": ErrorResponse, "description": "Validation error"}
+_err404 = {"model": ErrorResponse, "description": "Not found"}
+_err500 = {"model": ErrorResponse, "description": "Auto-save failed"}
 
 router = APIRouter(prefix="/media-items", tags=["MediaItems"])
 
@@ -45,7 +51,12 @@ router = APIRouter(prefix="/media-items", tags=["MediaItems"])
 # ---------------------------------------------------------------------------
 
 
-@router.post("", response_model=MediaItem, status_code=201)
+@router.post(
+    "",
+    response_model=MediaItem,
+    status_code=201,
+    responses={400: _err400, 404: _err404, 500: _err500},
+)
 def create_media_item(req: CreateMediaItemRequest) -> MediaItem:
     """Create a new MediaItem (FEAT-001, REQ-F-001..008).
 
@@ -61,7 +72,12 @@ def create_media_item(req: CreateMediaItemRequest) -> MediaItem:
 # ---------------------------------------------------------------------------
 
 
-@router.get("", response_model=dict, status_code=200)
+@router.get(
+    "",
+    response_model=MediaItemListResponse,
+    status_code=200,
+    responses={400: _err400},
+)
 def list_media_items(
     q: str | None = None,
     type: MediaType | None = None,
@@ -71,7 +87,7 @@ def list_media_items(
     topic_id: str | None = None,
     sort: str | None = None,
     dir: str | None = "asc",
-) -> dict:
+) -> MediaItemListResponse:
     """List MediaItems with optional search, filter, and sort (FEAT-002/008/009/010/011).
 
     VR-010: rating_min must not exceed rating_max.
@@ -101,7 +117,7 @@ def list_media_items(
     if topic_id is not None:
         items = [i for i in items if any(t.id == topic_id for t in i.topics)]
 
-    # Rating filter — unrated items always excluded when any bound active (REQ-F-048)
+    # Rating filter -- unrated items always excluded when any bound active (REQ-F-048)
     if rating_min is not None or rating_max is not None:
         items = [i for i in items if i.rating is not None]
         if rating_min is not None:
@@ -121,7 +137,7 @@ def list_media_items(
         rated_sorted = sorted(rated, key=lambda i: i.rating, reverse=reverse)
         items = rated_sorted + unrated
 
-    return {"data": items, "total": len(items)}
+    return MediaItemListResponse(data=items, total=len(items))
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +145,12 @@ def list_media_items(
 # ---------------------------------------------------------------------------
 
 
-@router.get("/{item_id}", response_model=MediaItem, status_code=200)
+@router.get(
+    "/{item_id}",
+    response_model=MediaItem,
+    status_code=200,
+    responses={404: _err404},
+)
 def get_media_item(item_id: str) -> MediaItem:
     """Return a single MediaItem (FEAT-002, REQ-F-009)."""
     return media_item_service.get_media_item(item_id)
@@ -140,7 +161,12 @@ def get_media_item(item_id: str) -> MediaItem:
 # ---------------------------------------------------------------------------
 
 
-@router.patch("/{item_id}", response_model=MediaItem, status_code=200)
+@router.patch(
+    "/{item_id}",
+    response_model=MediaItem,
+    status_code=200,
+    responses={400: _err400, 404: _err404, 500: _err500},
+)
 def update_media_item(item_id: str, req: UpdateMediaItemRequest) -> MediaItem:
     """Partially update a MediaItem (FEAT-002/003/005, REQ-F-010..019)."""
     return media_item_service.update_media_item(item_id, req)
@@ -151,7 +177,11 @@ def update_media_item(item_id: str, req: UpdateMediaItemRequest) -> MediaItem:
 # ---------------------------------------------------------------------------
 
 
-@router.delete("/{item_id}", status_code=204)
+@router.delete(
+    "/{item_id}",
+    status_code=204,
+    responses={404: _err404, 500: _err500},
+)
 def delete_media_item(item_id: str) -> Response:
     """Delete a MediaItem and its associations (FEAT-004, REQ-F-012..017)."""
     media_item_service.delete_media_item(item_id)
@@ -165,7 +195,12 @@ def delete_media_item(item_id: str) -> Response:
 assoc_router = APIRouter(prefix="/media-items", tags=["MediaItemAssociations"])
 
 
-@assoc_router.post("/{item_id}/topics/{topic_id}", response_model=MediaItem, status_code=200)
+@assoc_router.post(
+    "/{item_id}/topics/{topic_id}",
+    response_model=MediaItem,
+    status_code=200,
+    responses={404: _err404, 500: _err500},
+)
 def add_topic_to_media_item(item_id: str, topic_id: str) -> MediaItem:
     """Associate a Topic with a MediaItem (idempotent, DD-006, REQ-F-030).
 
@@ -175,7 +210,11 @@ def add_topic_to_media_item(item_id: str, topic_id: str) -> MediaItem:
     return association_service.add_topic_to_media_item(item_id, topic_id)
 
 
-@assoc_router.delete("/{item_id}/topics/{topic_id}", status_code=204)
+@assoc_router.delete(
+    "/{item_id}/topics/{topic_id}",
+    status_code=204,
+    responses={404: _err404, 500: _err500},
+)
 def remove_topic_from_media_item(item_id: str, topic_id: str) -> Response:
     """Remove Topic association from a MediaItem (REQ-F-031).
 

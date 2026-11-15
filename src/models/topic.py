@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from src.models.media_item import MediaItemRef
+from src.models.media_item import MediaItem, MediaItemRef
 
 # ---------------------------------------------------------------------------
 # Request schemas
@@ -65,5 +65,31 @@ class SearchResultItem(BaseModel):
     kind: str          # "media_item" | "topic"
     id: str
     name: str
-    type: str | None = None    # MediaType value — present for media_item results
-    status: str | None = None  # MediaStatus value — present for media_item results
+    type: str | None = None    # MediaType value -- present for media_item results
+    status: str | None = None  # MediaStatus value -- present for media_item results
+    rating: int | None = None  # present for media_item results only
+
+
+# ---------------------------------------------------------------------------
+# Typed list/search response wrappers (used as response_model in routes so
+# that FastAPI exposes TopicSummary, SearchResultItem in the OpenAPI schema)
+# ---------------------------------------------------------------------------
+
+
+class TopicListResponse(BaseModel):
+    """Response body for GET /api/topics."""
+
+    data: list[TopicSummary]
+
+
+class MediaItemListResponse(BaseModel):
+    """Response body for GET /api/media-items."""
+
+    data: list[MediaItem]
+    total: int
+
+
+class SearchResponse(BaseModel):
+    """Response body for GET /api/search."""
+
+    data: list[SearchResultItem]

@@ -20,11 +20,22 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi.responses import Response
 
+from src.errors.error_codes import ErrorResponse
 from src.logging.logger import get_logger
-from src.models.topic import CreateTopicRequest, Topic, UpdateTopicRequest
+from src.models.topic import (
+    CreateTopicRequest,
+    Topic,
+    TopicListResponse,
+    UpdateTopicRequest,
+)
 from src.services import association_service, topic_service
 
 log = get_logger(__name__)
+
+_err400 = {"model": ErrorResponse, "description": "Validation error"}
+_err404 = {"model": ErrorResponse, "description": "Not found"}
+_err409 = {"model": ErrorResponse, "description": "Conflict"}
+_err500 = {"model": ErrorResponse, "description": "Auto-save failed"}
 
 router = APIRouter(prefix="/topics", tags=["Topics"])
 assoc_router = APIRouter(prefix="/topics", tags=["TopicAssociations"])
@@ -35,7 +46,12 @@ assoc_router = APIRouter(prefix="/topics", tags=["TopicAssociations"])
 # ---------------------------------------------------------------------------
 
 
-@router.post("", response_model=Topic, status_code=201)
+@router.post(
+    "",
+    response_model=Topic,
+    status_code=201,
+    responses={400: _err400, 409: _err409, 500: _err500},
+)
 def create_topic(req: CreateTopicRequest) -> Topic:
     """Create a new Topic (FEAT-005, REQ-F-020..021).
 
@@ -52,10 +68,15 @@ def create_topic(req: CreateTopicRequest) -> Topic:
 # ---------------------------------------------------------------------------
 
 
-@router.get("", response_model=dict, status_code=200)
-def list_topics() -> dict:
+@router.get(
+    "",
+    response_model=TopicListResponse,
+    status_code=200,
+    responses={400: _err400, 500: _err500},
+)
+def list_topics() -> TopicListResponse:
     """List all Topics as TopicSummary objects (FEAT-005, REQ-F-022)."""
-    return {"data": topic_service.list_topics()}
+    return TopicListResponse(data=topic_service.list_topics())
 
 
 # ---------------------------------------------------------------------------
@@ -63,7 +84,12 @@ def list_topics() -> dict:
 # ---------------------------------------------------------------------------
 
 
-@router.get("/{topic_id}", response_model=Topic, status_code=200)
+@router.get(
+    "/{topic_id}",
+    response_model=Topic,
+    status_code=200,
+    responses={404: _err404},
+)
 def get_topic(topic_id: str) -> Topic:
     """Return a single Topic with its media_items (FEAT-005, REQ-F-022)."""
     return topic_service.get_topic(topic_id)
@@ -74,7 +100,12 @@ def get_topic(topic_id: str) -> Topic:
 # ---------------------------------------------------------------------------
 
 
-@router.patch("/{topic_id}", response_model=Topic, status_code=200)
+@router.patch(
+    "/{topic_id}",
+    response_model=Topic,
+    status_code=200,
+    responses={400: _err400, 404: _err404, 409: _err409, 500: _err500},
+)
 def update_topic(topic_id: str, req: UpdateTopicRequest) -> Topic:
     """Rename a Topic (FEAT-005, REQ-F-023..025).
 
@@ -91,7 +122,11 @@ def update_topic(topic_id: str, req: UpdateTopicRequest) -> Topic:
 # ---------------------------------------------------------------------------
 
 
-@router.delete("/{topic_id}", status_code=204)
+@router.delete(
+    "/{topic_id}",
+    status_code=204,
+    responses={404: _err404, 500: _err500},
+)
 def delete_topic(topic_id: str) -> Response:
     """Delete a Topic and unlink it from all MediaItems (FEAT-005, REQ-F-026..029).
 
@@ -108,7 +143,12 @@ def delete_topic(topic_id: str) -> Response:
 # ---------------------------------------------------------------------------
 
 
-@assoc_router.post("/{topic_id}/media-items/{media_id}", response_model=Topic, status_code=200)
+@assoc_router.post(
+    "/{topic_id}/media-items/{media_id}",
+    response_model=Topic,
+    status_code=200,
+    responses={404: _err404, 500: _err500},
+)
 def add_media_item_to_topic(topic_id: str, media_id: str) -> Topic:
     """Associate a MediaItem with a Topic (idempotent, FEAT-006, REQ-F-032).
 
@@ -123,7 +163,11 @@ def add_media_item_to_topic(topic_id: str, media_id: str) -> Topic:
 # ---------------------------------------------------------------------------
 
 
-@assoc_router.delete("/{topic_id}/media-items/{media_id}", status_code=204)
+@assoc_router.delete(
+    "/{topic_id}/media-items/{media_id}",
+    status_code=204,
+    responses={404: _err404, 500: _err500},
+)
 def remove_media_item_from_topic(topic_id: str, media_id: str) -> Response:
     """Remove a MediaItem association from a Topic (FEAT-006, REQ-F-033).
 
