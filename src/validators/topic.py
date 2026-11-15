@@ -15,8 +15,6 @@ the behaviour described either way: non-empty, trimmed, case-insensitively uniqu
 
 from __future__ import annotations
 
-from typing import Optional
-
 from src.errors import error_codes
 from src.errors.handlers import ConflictError, ValidationError
 from src.logging.logger import get_logger
@@ -47,7 +45,7 @@ def validate_and_trim_name(name: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def check_unique(name: str, existing_topics: dict, exclude_id: Optional[str] = None) -> None:
+def check_unique(name: str, existing_topics: dict, exclude_id: str | None = None) -> None:
     """Raise ConflictError if a topic with the same name (case-insensitive) exists.
 
     Args:

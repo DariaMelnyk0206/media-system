@@ -15,10 +15,8 @@ Covers:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # Enumerations
@@ -55,7 +53,7 @@ class MediaItemRef(BaseModel):
     name: str
     type: MediaType
     status: MediaStatus
-    rating: Optional[int] = None
+    rating: int | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -69,8 +67,8 @@ class CreateMediaItemRequest(BaseModel):
     name: str
     type: MediaType
     status: MediaStatus = MediaStatus.planned
-    notes: Optional[str] = None
-    rating: Optional[int] = None
+    notes: str | None = None
+    rating: int | None = None
     topic_ids: list[str] = Field(default_factory=list)
 
 
@@ -81,11 +79,11 @@ class UpdateMediaItemRequest(BaseModel):
     Pass null for notes or rating to clear those fields (DD-005).
     """
 
-    name: Optional[str] = None
-    type: Optional[MediaType] = None
-    status: Optional[MediaStatus] = None
-    notes: Optional[str] = None
-    rating: Optional[int] = None
+    name: str | None = None
+    type: MediaType | None = None
+    status: MediaStatus | None = None
+    notes: str | None = None
+    rating: int | None = None
     # Sentinel to distinguish "absent" from "null" for nullable fields.
     # We use a model_fields_set check at the service layer instead.
 
@@ -109,6 +107,6 @@ class MediaItem(BaseModel):
     name: str
     type: MediaType
     status: MediaStatus
-    notes: Optional[str] = None
-    rating: Optional[int] = None
+    notes: str | None = None
+    rating: int | None = None
     topics: list[TopicRef] = Field(default_factory=list)

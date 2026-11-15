@@ -23,8 +23,6 @@ from fastapi.responses import Response
 from src.errors.error_codes import (
     INVALID_RATING_BOUND,
     INVALID_RATING_RANGE,
-    INVALID_STATUS,
-    INVALID_TYPE,
 )
 from src.errors.handlers import ValidationError
 from src.logging.logger import get_logger

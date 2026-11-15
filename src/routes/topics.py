@@ -21,7 +21,7 @@ from fastapi import APIRouter
 from fastapi.responses import Response
 
 from src.logging.logger import get_logger
-from src.models.topic import CreateTopicRequest, Topic, TopicSummary, UpdateTopicRequest
+from src.models.topic import CreateTopicRequest, Topic, UpdateTopicRequest
 from src.services import association_service, topic_service
 
 log = get_logger(__name__)

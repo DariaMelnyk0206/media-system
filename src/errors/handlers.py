@@ -16,8 +16,6 @@ Usage (raising):
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -32,7 +30,6 @@ from src.errors.error_codes import (
     ErrorResponse,
 )
 
-
 # ---------------------------------------------------------------------------
 # Custom exception classes
 # ---------------------------------------------------------------------------
@@ -43,15 +40,15 @@ class PMSLHTTPException(Exception):
 
     status_code: int
     error: str
-    field: Optional[str]
+    field: str | None
     message: str
 
     def __init__(
         self,
         error: str,
         *,
-        field: Optional[str] = None,
-        message: Optional[str] = None,
+        field: str | None = None,
+        message: str | None = None,
         status_code: int,
     ) -> None:
         self.error = error
@@ -67,28 +64,28 @@ class PMSLHTTPException(Exception):
 class ValidationError(PMSLHTTPException):
     """400 Bad Request — validation rule violated."""
 
-    def __init__(self, error: str, *, field: Optional[str] = None, message: Optional[str] = None) -> None:
+    def __init__(self, error: str, *, field: str | None = None, message: str | None = None) -> None:
         super().__init__(error, field=field, message=message, status_code=400)
 
 
 class NotFoundError(PMSLHTTPException):
     """404 Not Found."""
 
-    def __init__(self, message: Optional[str] = None) -> None:
+    def __init__(self, message: str | None = None) -> None:
         super().__init__(NOT_FOUND, field=None, message=message, status_code=404)
 
 
 class ConflictError(PMSLHTTPException):
     """409 Conflict."""
 
-    def __init__(self, error: str, *, field: Optional[str] = None, message: Optional[str] = None) -> None:
+    def __init__(self, error: str, *, field: str | None = None, message: str | None = None) -> None:
         super().__init__(error, field=field, message=message, status_code=409)
 
 
 class SaveFailedError(PMSLHTTPException):
     """500 Internal Server Error — auto-save failure (REQ-F-060)."""
 
-    def __init__(self, message: Optional[str] = None) -> None:
+    def __init__(self, message: str | None = None) -> None:
         super().__init__(SAVE_FAILED, field=None, message=message, status_code=500)
 
 

@@ -13,12 +13,9 @@ Covers:
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 from src.models.media_item import MediaItemRef
-
 
 # ---------------------------------------------------------------------------
 # Request schemas
@@ -68,5 +65,5 @@ class SearchResultItem(BaseModel):
     kind: str          # "media_item" | "topic"
     id: str
     name: str
-    type: Optional[str] = None    # MediaType value — present for media_item results
-    status: Optional[str] = None  # MediaStatus value — present for media_item results
+    type: str | None = None    # MediaType value — present for media_item results
+    status: str | None = None  # MediaStatus value — present for media_item results

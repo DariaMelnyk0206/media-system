@@ -14,10 +14,7 @@ ErrorResponse fields (all 3 required by contract):
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel
-
 
 # ---------------------------------------------------------------------------
 # ErrorResponse schema
@@ -31,7 +28,7 @@ class ErrorResponse(BaseModel):
     """
 
     error: str
-    field: Optional[str] = None
+    field: str | None = None
     message: str
 
 

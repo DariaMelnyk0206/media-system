@@ -27,6 +27,7 @@ from src.logging.logger import get_logger
 from src.repository import storage
 from src.routes.media_items import assoc_router as media_assoc_router
 from src.routes.media_items import router as media_items_router
+from src.routes.search import router as search_router
 from src.routes.topics import assoc_router as topic_assoc_router
 from src.routes.topics import router as topics_router
 
@@ -84,6 +85,7 @@ app.include_router(media_items_router, prefix="/api")
 app.include_router(media_assoc_router, prefix="/api")
 app.include_router(topics_router, prefix="/api")
 app.include_router(topic_assoc_router, prefix="/api")
+app.include_router(search_router, prefix="/api")
 
 # ---------------------------------------------------------------------------
 # Logging middleware

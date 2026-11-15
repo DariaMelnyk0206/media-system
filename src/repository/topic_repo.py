@@ -17,7 +17,6 @@ media_item entries for matching topic_ids.
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 from src.logging.logger import get_logger
 from src.models.media_item import MediaItemRef, MediaStatus, MediaType
@@ -76,7 +75,7 @@ def create(name: str) -> Topic:
     return _to_model(raw)
 
 
-def get_by_id(topic_id: str) -> Optional[Topic]:
+def get_by_id(topic_id: str) -> Topic | None:
     topics = storage.get_topics()
     raw = topics.get(topic_id)
     return _to_model(raw) if raw else None
@@ -86,7 +85,7 @@ def list_all() -> list[TopicSummary]:
     return [_to_summary(raw) for raw in storage.get_topics().values()]
 
 
-def find_by_name_ci(name: str) -> Optional[dict]:
+def find_by_name_ci(name: str) -> dict | None:
     """Return raw dict of the topic whose name matches case-insensitively, or None."""
     normalised = name.strip().lower()
     for raw in storage.get_topics().values():
@@ -95,7 +94,7 @@ def find_by_name_ci(name: str) -> Optional[dict]:
     return None
 
 
-def rename(topic_id: str, new_name: str) -> Optional[Topic]:
+def rename(topic_id: str, new_name: str) -> Topic | None:
     """Rename a Topic.  Returns updated Topic, or None if not found."""
     topics = storage.get_topics()
     raw = topics.get(topic_id)
@@ -129,7 +128,7 @@ def delete(topic_id: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def add_media_item(topic_id: str, media_item_id: str) -> Optional[Topic]:
+def add_media_item(topic_id: str, media_item_id: str) -> Topic | None:
     """Add media_item_id to the topic's association (via media_item side)."""
     topics = storage.get_topics()
     if topic_id not in topics:
@@ -144,7 +143,7 @@ def add_media_item(topic_id: str, media_item_id: str) -> Optional[Topic]:
     return _to_model(topics[topic_id])
 
 
-def remove_media_item(topic_id: str, media_item_id: str) -> Optional[bool]:
+def remove_media_item(topic_id: str, media_item_id: str) -> bool | None:
     """Remove media_item_id from topic's association.
 
     Returns True (removed), False (not associated), None (topic not found).

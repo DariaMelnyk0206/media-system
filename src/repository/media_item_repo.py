@@ -21,7 +21,6 @@ Internal storage format per entry:
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 from src.logging.logger import get_logger
 from src.models.media_item import (
@@ -88,7 +87,7 @@ def create(req: CreateMediaItemRequest) -> MediaItem:
     return _to_model(raw, topics)
 
 
-def get_by_id(item_id: str) -> Optional[MediaItem]:
+def get_by_id(item_id: str) -> MediaItem | None:
     """Return the MediaItem with the given id, or None if not found."""
     store = storage.get_media_items()
     raw = store.get(item_id)
@@ -103,7 +102,7 @@ def list_all() -> list[MediaItem]:
     return [_to_model(raw, topics) for raw in storage.get_media_items().values()]
 
 
-def update(item_id: str, req: UpdateMediaItemRequest, set_fields: set[str]) -> Optional[MediaItem]:
+def update(item_id: str, req: UpdateMediaItemRequest, set_fields: set[str]) -> MediaItem | None:
     """Apply a partial update.  Only fields present in set_fields are written.
 
     set_fields is model_fields_set from the parsed request body — it correctly
@@ -152,7 +151,7 @@ def delete(item_id: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def add_topic(item_id: str, topic_id: str) -> Optional[MediaItem]:
+def add_topic(item_id: str, topic_id: str) -> MediaItem | None:
     """Add topic_id to the item's topic_ids if not already present."""
     store = storage.get_media_items()
     raw = store.get(item_id)
@@ -164,7 +163,7 @@ def add_topic(item_id: str, topic_id: str) -> Optional[MediaItem]:
     return _to_model(raw, storage.get_topics())
 
 
-def remove_topic(item_id: str, topic_id: str) -> Optional[bool]:
+def remove_topic(item_id: str, topic_id: str) -> bool | None:
     """Remove topic_id from item's topic_ids.
 
     Returns:

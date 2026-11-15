@@ -15,8 +15,6 @@ VR-009  status must be one of 5 valid MediaStatus values (enforced by Pydantic e
 
 from __future__ import annotations
 
-from typing import Optional
-
 from src.errors import error_codes
 from src.errors.handlers import ValidationError
 from src.logging.logger import get_logger
@@ -47,7 +45,7 @@ def validate_and_trim_name(name: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def validate_rating(rating: Optional[int]) -> None:
+def validate_rating(rating: int | None) -> None:
     """Reject rating outside [1, 10] when provided (VR-007).
 
     None is always accepted (unset rating).
@@ -65,7 +63,7 @@ def validate_rating(rating: Optional[int]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def validate_create(name: str, rating: Optional[int]) -> str:
+def validate_create(name: str, rating: int | None) -> str:
     """Run VR-001/002 and VR-007 for a create request.
 
     Returns trimmed name.
@@ -81,12 +79,12 @@ def validate_create(name: str, rating: Optional[int]) -> str:
 # ---------------------------------------------------------------------------
 
 
-def validate_update(name: Optional[str], rating: Optional[int], set_fields: set[str]) -> Optional[str]:
+def validate_update(name: str | None, rating: int | None, set_fields: set[str]) -> str | None:
     """Run applicable VRs for a PATCH request.
 
     Returns trimmed name if 'name' is in set_fields, else None.
     """
-    trimmed_name: Optional[str] = None
+    trimmed_name: str | None = None
     if "name" in set_fields and name is not None:
         trimmed_name = validate_and_trim_name(name)
     if "rating" in set_fields:
