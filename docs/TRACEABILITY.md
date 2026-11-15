@@ -339,3 +339,42 @@ prefix and have status **PASS** in the runtime contract suite.
 | `DELETE` | `/topics/{id}/media-items/{mediaId}` | PASS |
 | `GET` | `/search` | PASS |
 | `GET` | `/stats` | PASS |
+
+### FINAL-GATE-001 — Final Laboratory Acceptance
+
+**Project:** PEP-001 / media-system | **Completion date:** 2026-11-15
+**Decision:** **GO (PASS)**
+
+| Verification scope | Result | Evidence |
+|---|---|---|
+| Functional requirements | PASS | REQ-F-001..066 and REQ-F-070..074 traced; REQ-F-067..069 are intentionally unallocated |
+| Acceptance criteria and BDD scenarios | PASS | AC-001..075 and BDD-001..075 mapped in the baseline and Addendum 001 |
+| Feature and test tickets | PASS | 29/29 tickets (FEAT-001..013, TEST-001..016) are Done in `docs/jira-decomposition.csv` |
+| Automated tests | PASS | 297/297 across 14 modules; one warning |
+| Ruff | PASS | 0 errors |
+| Live OpenAPI operation coverage | PASS | 16/16 documented operations present in the running application |
+| Live OpenAPI schema coverage | PASS with note | All 17 documented schemas are present; runtime also exposes five generated schemas |
+| Human live-API validation | PASS | Search, filtering, rating sort, collection statistics, and HTTP 400/404/409 responses verified |
+| Persistence after restart | PASS | Uvicorn reloaded 3 MediaItems and 2 Topics; aggregates and Many-to-Many links were restored |
+| Log audit | PASS | Final live-run segment has lifecycle, entity, association, search, statistics, and store events, with no unhandled traceback |
+| Temporary artifacts and worktree | PASS | Temporary store absent; Step 7 `git status --short` was clean before these gate documents were added |
+
+**OpenAPI qualification:** the 17 documented schemas are present in the live
+document, which also exposes five FastAPI-generated schemas. Structural
+comparison found differences in ten shared schemas, including required-field
+and nullable/format representations. This gate verifies schema coverage, not
+strict structural identity. The runtime contract suite passed; the known
+schema representation differences remain a non-blocking documentation
+alignment note.
+
+**Decision rationale:** GO is granted for laboratory completion because the
+automated suite and Ruff passed, live API behavior and expected client errors
+were verified, persisted state survived a Uvicorn restart, the allocated
+requirements are traced, and all 29 feature/test tickets are Done. The
+OpenAPI qualification above is retained as an explicit limitation, not
+reported as an exact match.
+
+Historical traceback entries in `logs/system.log` are from tests that
+deliberately simulate statistics-processing failures and verify a handled
+HTTP 500 response. No unhandled traceback was observed in the final live-run
+segment.
