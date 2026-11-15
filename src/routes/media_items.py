@@ -35,7 +35,7 @@ from src.models.media_item import (
     MediaType,
     UpdateMediaItemRequest,
 )
-from src.services import media_item_service
+from src.services import association_service, media_item_service
 
 log = get_logger(__name__)
 
@@ -169,12 +169,20 @@ assoc_router = APIRouter(prefix="/media-items", tags=["MediaItemAssociations"])
 
 @assoc_router.post("/{item_id}/topics/{topic_id}", response_model=MediaItem, status_code=200)
 def add_topic_to_media_item(item_id: str, topic_id: str) -> MediaItem:
-    """Associate a Topic with a MediaItem (idempotent, DD-006, REQ-F-030)."""
-    return media_item_service.add_topic_to_media_item(item_id, topic_id)
+    """Associate a Topic with a MediaItem (idempotent, DD-006, REQ-F-030).
+
+    404 if either entity does not exist.
+    Logs: association.link
+    """
+    return association_service.add_topic_to_media_item(item_id, topic_id)
 
 
 @assoc_router.delete("/{item_id}/topics/{topic_id}", status_code=204)
 def remove_topic_from_media_item(item_id: str, topic_id: str) -> Response:
-    """Remove Topic association from a MediaItem (REQ-F-031)."""
-    media_item_service.remove_topic_from_media_item(item_id, topic_id)
+    """Remove Topic association from a MediaItem (REQ-F-031).
+
+    404 if the association does not exist.
+    Logs: association.unlink
+    """
+    association_service.remove_topic_from_media_item(item_id, topic_id)
     return Response(status_code=204)
